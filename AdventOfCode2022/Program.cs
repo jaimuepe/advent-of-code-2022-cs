@@ -2,4 +2,4 @@
 using AdventOfCode2022.Core;
 
 Problem problem = new Problem12();
-problem.RunA(true);
+problem.RunB(true);

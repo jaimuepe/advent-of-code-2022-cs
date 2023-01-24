@@ -30,8 +30,16 @@ public abstract partial class Problem
 
     private void Run_Internal(bool isTest, Action<List<string>> internalFcn)
     {
-        WriteLine($"### DAY {ProblemIndexStr} ###");
         IsTest = isTest;
+
+        if (IsTest)
+        {
+            WriteLine($"### DAY {ProblemIndexStr} {ProblemType} - TEST ###");
+        }
+        else
+        {
+            WriteLine($"### DAY {ProblemIndexStr} {ProblemType} ###");
+        }
 
         var fileName = (isTest ? ProblemIndexStr + "_TEST" : ProblemIndexStr) + ".txt";
 
@@ -44,7 +52,7 @@ public abstract partial class Problem
         SetupConsole();
         Console.Write(c);
     }
-    
+
     protected void Write(string line)
     {
         SetupConsole();
@@ -56,7 +64,7 @@ public abstract partial class Problem
         SetupConsole();
         Console.WriteLine(c);
     }
-    
+
     protected void WriteLine(string line)
     {
         SetupConsole();

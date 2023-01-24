@@ -1,4 +1,6 @@
-﻿using AdventOfCode2022.Core;
+﻿#define STORE_CHAIN
+
+using AdventOfCode2022.Core;
 
 namespace AdventOfCode2022._12;
 
@@ -11,7 +13,7 @@ public class Problem12 : Problem
         Heightmap = new Heightmap(lines);
 
         var startNode = Heightmap.Grid[Heightmap.StartY][Heightmap.StartX];
-        Heightmap.VisitNeighbors(startNode, new List<NodeInfo>());
+        Heightmap.Solve(startNode);
 
         PrintSolution();
     }
@@ -26,36 +28,43 @@ public class Problem12 : Problem
         {
             for (int x = 0; x < Heightmap.Cols; x++)
             {
-                if (Heightmap.Grid[y][x].Height == 'a')
+                char height = Heightmap.Grid[y][x].Height;
+                if (height == 'a')
                 {
                     startNodes.Add(Heightmap.Grid[y][x]);
                 }
             }
         }
 
-        startNodes.ForEach(startNode => Heightmap.VisitNeighbors(startNode, new List<NodeInfo>()));
+        startNodes.ForEach(startNode => Heightmap.Solve(startNode));
 
         PrintSolution();
     }
 
     private void PrintSolution()
     {
-        if (Heightmap.BestSolution == null)
+        if (Heightmap.ShortestPath == -1)
         {
             Console.Error.WriteLine("Could not find any solution");
             return;
         }
 
-        Heightmap.PrintSequence(Heightmap.BestSolution);
+#if STORE_CHAIN
+        Heightmap.PrintSequence(Heightmap.BestSolution!);
+#endif
 
-        int steps = Heightmap.BestSolution.Count;
+        int steps = Heightmap.ShortestPath;
         WriteLine($"Solution: {steps}");
     }
 }
 
 internal class Heightmap
 {
+    public int ShortestPath { get; private set; } = -1;
+
+#if STORE_CHAIN
     public List<NodeInfo>? BestSolution { get; private set; }
+#endif
 
     public NodeInfo[][] Grid { get; }
 
@@ -77,7 +86,22 @@ internal class Heightmap
         PopulateGrid(lines);
     }
 
-    public void VisitNeighbors(NodeInfo node, List<NodeInfo> chain)
+    public void Solve(NodeInfo startNode)
+    {
+        startNode.Cost = 0;
+#if STORE_CHAIN
+        List<NodeInfo> visitedNodes = new List<NodeInfo>() { startNode };
+        VisitNeighbors(startNode, visitedNodes);
+#else
+        VisitNeighbors(startNode);
+#endif
+    }
+
+#if STORE_CHAIN
+    private void VisitNeighbors(NodeInfo node, List<NodeInfo> chain)
+#else
+    private void VisitNeighbors(NodeInfo node)
+#endif
     {
         int cost = node.Cost + 1;
 
@@ -85,32 +109,37 @@ internal class Heightmap
 
         foreach (NodeInfo neighbor in neighbors)
         {
-            if (CanVisitNeighbor(node, neighbor))
+            if (!CanVisitNeighbor(node, neighbor)) continue;
+
+            if (neighbor.Y == EndY && neighbor.X == EndX)
             {
-                if (neighbor.Y == EndY && neighbor.X == EndX)
+                // reached end
+                if (ShortestPath == -1 || ShortestPath > cost)
                 {
-                    // reached end
-                    if (BestSolution == null || BestSolution.Count > chain.Count)
-                    {
-                        BestSolution = chain;
-                    }
-
-                    break;
+                    ShortestPath = cost;
+#if STORE_CHAIN
+                    BestSolution = chain;
+#endif
                 }
 
-                if (neighbor.Cost == -1 || neighbor.Cost > cost)
-                {
-                    // not visited or shortest path
-                    neighbor.Cost = cost;
+                break;
+            }
 
-                    var chainCopy = new List<NodeInfo>(chain) { neighbor };
-                    VisitNeighbors(neighbor, chainCopy);
-                }
+            if (neighbor.Cost == -1 || neighbor.Cost > cost)
+            {
+                // not visited or shorter path
+                neighbor.Cost = cost;
+#if STORE_CHAIN
+                var newChain = new List<NodeInfo>(chain) { neighbor };
+                VisitNeighbors(neighbor, newChain);
+#else
+                VisitNeighbors(neighbor);
+#endif
             }
         }
     }
 
-    private bool CanVisitNeighbor(NodeInfo node, NodeInfo neighbor)
+    private static bool CanVisitNeighbor(NodeInfo node, NodeInfo neighbor)
     {
         return neighbor.Height <= node.Height + 1;
     }
@@ -122,25 +151,11 @@ internal class Heightmap
         int col = node.X;
         int row = node.Y;
 
-        if (row > 0)
-        {
-            neighbors.Add(Grid[row - 1][col]);
-        }
+        if (row > 0) neighbors.Add(Grid[row - 1][col]);
+        if (row < Rows - 1) neighbors.Add(Grid[row + 1][col]);
 
-        if (row < Rows - 1)
-        {
-            neighbors.Add(Grid[row + 1][col]);
-        }
-
-        if (col > 0)
-        {
-            neighbors.Add(Grid[row][col - 1]);
-        }
-
-        if (col < Cols - 1)
-        {
-            neighbors.Add(Grid[row][col + 1]);
-        }
+        if (col > 0) neighbors.Add(Grid[row][col - 1]);
+        if (col < Cols - 1) neighbors.Add(Grid[row][col + 1]);
 
         return neighbors;
     }
@@ -158,11 +173,7 @@ internal class Heightmap
             printMatrix[y] = new char[Cols];
             for (int x = 0; x < Cols; x++)
             {
-                if (y == StartY && x == StartX)
-                {
-                    printMatrix[y][x] = 'S';
-                }
-                else if (y == EndY && x == EndX)
+                if (y == EndY && x == EndX)
                 {
                     printMatrix[y][x] = 'E';
                 }
@@ -241,7 +252,6 @@ internal class Heightmap
 
                 if (h == 'S')
                 {
-                    node.Cost = 0;
                     node.Height = 'a';
                     StartX = x;
                     StartY = y;

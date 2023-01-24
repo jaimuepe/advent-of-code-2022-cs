@@ -5,10 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a2df1c41-67c9-49a6-b0be-06eb12f88aa5" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AdventOfCode2022.sln" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AdventOfCode2022/AdventOfCode2022.csproj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/AdventOfCode2022/Program.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.AdventOfCode/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.AdventOfCode/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AdventOfCode2022/12/Problem12.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AdventOfCode2022/12/Problem12.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AdventOfCode2022/Core/Problem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AdventOfCode2022/Core/Problem.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AdventOfCode2022/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/AdventOfCode2022/Program.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,7 +80,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1674514604108</updated>
-      <workItem from="1674514605320" duration="6688000" />
+      <workItem from="1674514605320" duration="8514000" />
     </task>
     <servers />
   </component>
