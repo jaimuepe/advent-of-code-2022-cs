@@ -76,14 +76,14 @@ public class Problem13 : Problem
         };
 
         int i = 1;
-        packet.Data = ParseListPacketData(rawData, ref i);
+        packet.Data = ParseListData(rawData, ref i);
 
         return packet;
     }
 
-    private static ListPacketData ParseListPacketData(string rawData, ref int i)
+    private static ListData ParseListData(string rawData, ref int i)
     {
-        var listData = new ListPacketData();
+        var listData = new ListData();
 
         while (i < rawData.Length)
         {
@@ -93,7 +93,7 @@ public class Problem13 : Problem
             {
                 // skip opening brace
                 i++;
-                listData.Packets.Add(ParseListPacketData(rawData, ref i));
+                listData.Packets.Add(ParseListData(rawData, ref i));
             }
             else if (c == ']')
             {
@@ -108,7 +108,7 @@ public class Problem13 : Problem
             }
             else
             {
-                listData.Packets.Add(ParseIntPacketData(rawData, ref i));
+                listData.Packets.Add(ParseIntData(rawData, ref i));
                 i++;
             }
         }
@@ -116,7 +116,7 @@ public class Problem13 : Problem
         return listData;
     }
 
-    private static IntPacketData ParseIntPacketData(string rawData, ref int i)
+    private static IntData ParseIntData(string rawData, ref int i)
     {
         var endIdx = i + 1;
         while (rawData[endIdx] != ',' && rawData[endIdx] != ']') endIdx++;
@@ -124,10 +124,41 @@ public class Problem13 : Problem
         var num = int.Parse(rawData.Substring(i, endIdx - i));
         i = endIdx - 1;
 
-        return new IntPacketData() { Value = num };
+        return new IntData() { Value = num };
     }
 
-    private static int IntsCompareTo(IntPacketData left, IntPacketData right)
+    private static int CompareTo(IData left, IData right)
+    {
+        if (left is IntData && right is IntData)
+        {
+            return CompareTo_Impl((IntData)left, (IntData)right);
+        }
+
+        if (left is ListData && right is ListData)
+        {
+            return CompareTo_Impl((ListData)left, (ListData)right);
+        }
+
+        // If exactly one value is an integer, convert the integer to a list which contains that
+        // integer as its only value, then retry the comparison
+
+        if (left is IntData)
+        {
+            // right is list, left is int
+            var tempLeft = new ListData();
+            tempLeft.Packets.Add(left);
+
+            return CompareTo_Impl(tempLeft, (ListData)right);
+        }
+
+        // right is int, left is list
+        var tempRight = new ListData();
+        tempRight.Packets.Add(right);
+
+        return CompareTo_Impl((ListData)left, tempRight);
+    }
+
+    private static int CompareTo_Impl(IntData left, IntData right)
     {
         if (left.Value < right.Value)
         {
@@ -145,7 +176,7 @@ public class Problem13 : Problem
         return 0;
     }
 
-    private static int ListsCompareTo(ListPacketData left, ListPacketData right)
+    private static int CompareTo_Impl(ListData left, ListData right)
     {
         var n = int.Min(left.Packets.Count, right.Packets.Count);
 
@@ -175,44 +206,13 @@ public class Problem13 : Problem
         // If the right list runs out of items first, the inputs are not in the right order
         return 1;
     }
-
-    private static int CompareTo(IPacketData left, IPacketData right)
-    {
-        if (left is IntPacketData && right is IntPacketData)
-        {
-            return IntsCompareTo((IntPacketData)left, (IntPacketData)right);
-        }
-
-        if (left is ListPacketData && right is ListPacketData)
-        {
-            return ListsCompareTo((ListPacketData)left, (ListPacketData)right);
-        }
-
-        // If exactly one value is an integer, convert the integer to a list which contains that
-        // integer as its only value, then retry the comparison
-
-        if (left is IntPacketData)
-        {
-            // right is list, left is int
-            var tempLeft = new ListPacketData();
-            tempLeft.Packets.Add(left);
-
-            return ListsCompareTo(tempLeft, (ListPacketData)right);
-        }
-
-        // right is int, left is list
-        var tempRight = new ListPacketData();
-        tempRight.Packets.Add(right);
-
-        return ListsCompareTo((ListPacketData)left, tempRight);
-    }
 }
 
 internal class Packet
 {
-    public string RawData { get; set; }
+    public string RawData { get; init; } = null!;
 
-    public IPacketData Data { get; set; }
+    public IData Data { get; set; } = null!;
 
     public void Print()
     {
@@ -221,18 +221,18 @@ internal class Packet
     }
 }
 
-internal interface IPacketData : IComparable
+internal interface IData
 {
     void Print();
 }
 
-internal class ListPacketData : IPacketData
+internal class ListData : IData
 {
-    public List<IPacketData> Packets { get; }
+    public List<IData> Packets { get; }
 
-    public ListPacketData()
+    public ListData()
     {
-        Packets = new List<IPacketData>();
+        Packets = new List<IData>();
     }
 
     public void Print()
@@ -251,24 +251,12 @@ internal class ListPacketData : IPacketData
     }
 }
 
-internal class IntPacketData : IPacketData
+internal class IntData : IData
 {
-    public int Value { get; set; }
+    public int Value { get; init; }
 
     public void Print()
     {
         Console.Write(Value.ToString());
-    }
-
-    public int CompareTo(object? obj)
-    {
-        if (obj is IntPacketData objAsInt)
-        {
-            
-        }
-        else if (obj is ListPacketData objAsList)
-        {
-            
-        }
     }
 }
