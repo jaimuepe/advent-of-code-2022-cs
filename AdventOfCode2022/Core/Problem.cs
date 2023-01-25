@@ -40,6 +40,7 @@ public abstract partial class Problem
         {
             WriteLine($"### DAY {ProblemIndexStr} {ProblemType} ###");
         }
+        WriteLine();
 
         var fileName = (isTest ? ProblemIndexStr + "_TEST" : ProblemIndexStr) + ".txt";
 
@@ -63,6 +64,11 @@ public abstract partial class Problem
     {
         SetupConsole();
         Console.WriteLine(c);
+    }
+
+    protected void WriteLine()
+    {
+        Console.WriteLine();
     }
 
     protected void WriteLine(string line)
