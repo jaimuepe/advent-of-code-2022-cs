@@ -1,6 +1,7 @@
 ﻿using AdventOfCode2022._13;
+using AdventOfCode2022._14;
 using AdventOfCode2022.Core;
 
-Problem problem = new Problem13();
+Problem problem = new Problem14();
 
-problem.RunB(false);
+problem.RunA(false);
