@@ -11,82 +11,66 @@ public class Problem14 : Problem
         _grid = CreateGrid(lines);
 
         int count = 0;
-
-        _grid.Print();
-        Console.WriteLine();
-
-        count = RunSimulation(count);
-
-        _grid.Print();
-        Console.WriteLine();
+        while (RunSimulation())
+        {
+            count++;
+        }
 
         WriteLine($"Result: {count}");
     }
 
     protected override void RunB_Internal(List<string> lines)
     {
-    }
+        _grid = CreateGrid(lines);
 
-    private int RunSimulation(int count)
-    {
-        while (true)
+        var count = 0;
+        while (!IsTileBlocked(500, 0) && RunSimulation())
         {
-            int grain_x = 500;
-            int grain_y = -1;
-
-            bool exit = false;
-
-            while (true)
-            {
-                if (IsOutOfBounds(grain_x, grain_y + 1))
-                {
-                    exit = true;
-                    break;
-                }
-
-                if (!IsTileBlocked(grain_x, grain_y + 1))
-                {
-                    // down
-                    grain_y++;
-                }
-                else if (IsOutOfBounds(grain_x - 1, grain_y + 1))
-                {
-                    exit = true;
-                    break;
-                }
-                else if (!IsTileBlocked(grain_x - 1, grain_y + 1))
-                {
-                    // down-left
-                    grain_x--;
-                    grain_y++;
-                }
-                else if (IsOutOfBounds(grain_x + 1, grain_y + 1))
-                {
-                    exit = true;
-                    break;
-                }
-                else if (!IsTileBlocked(grain_x + 1, grain_y + 1))
-                {
-                    // down-right
-                    grain_x++;
-                    grain_y++;
-                }
-                else
-                {
-                    // sleep
-                    count++;
-                    _grid.Set('o', grain_x, grain_y);
-                    break;
-                }
-            }
-
-            if (exit)
-            {
-                break;
-            }
+            count++;
         }
 
-        return count;
+        WriteLine($"Result: {count}");
+    }
+
+    private bool RunSimulation()
+    {
+        int grainX = 500;
+        int grainY = -1;
+
+        while (true)
+        {
+            if (IsOutOfBounds(grainX, grainY + 1))
+            {
+                return false;
+            }
+            else if (!IsTileBlocked(grainX, grainY + 1))
+            {
+                grainY++;
+            }
+            else if (IsOutOfBounds(grainX - 1, grainY + 1))
+            {
+                return false;
+            }
+            else if (!IsTileBlocked(grainX - 1, grainY + 1))
+            {
+                grainX--;
+                grainY++;
+            }
+            else if (IsOutOfBounds(grainX + 1, grainY + 1))
+            {
+                return false;
+            }
+            else if (!IsTileBlocked(grainX + 1, grainY + 1))
+            {
+                grainX++;
+                grainY++;
+            }
+            else
+            {
+                _grid.Set('o', grainX, grainY);
+                return true;
+            }
+        }
     }
 
     private bool IsOutOfBounds(int x, int y)
@@ -105,7 +89,7 @@ public class Problem14 : Problem
         List<Path> rocks = ParsePaths(lines);
 
         var minX = int.MaxValue;
-        var minY = 0;
+        const int minY = 0;
         var maxX = int.MinValue;
         var maxY = int.MinValue;
 
@@ -114,7 +98,6 @@ public class Problem14 : Problem
             foreach (Point point in rock.Points)
             {
                 minX = Math.Min(minX, point.X);
-                minY = Math.Min(minY, point.Y);
                 maxX = Math.Max(maxX, point.X);
                 maxY = Math.Max(maxY, point.Y);
             }
@@ -124,9 +107,12 @@ public class Problem14 : Problem
         {
             // assume the floor is an infinite horizontal line with a y coordinate equal
             // to two plus the highest y coordinate of any point in your scan
+
             maxY = 2 + maxY;
-            minX = -100;
-            maxX = 100;
+
+            // I'm just going to try to brute force it
+            minX -= 200;
+            maxX += 200;
         }
 
         int cols = maxX - minX + 1;
@@ -136,6 +122,7 @@ public class Problem14 : Problem
 
         if (ProblemType == EProblemType.B)
         {
+            // add floor
             for (int i = minX; i <= maxX; i++)
             {
                 grid.Set('#', i, maxY);
@@ -218,6 +205,7 @@ class OffsetGrid
     public int Cols => _grid.GetLength(1);
 
     private int OffsetX { get; }
+    
     private int OffsetY { get; }
 
     public OffsetGrid(int rows, int cols, Point offset)

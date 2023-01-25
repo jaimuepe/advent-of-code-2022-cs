@@ -32,6 +32,7 @@ public abstract partial class Problem
     {
         IsTest = isTest;
 
+        WriteLine();
         if (IsTest)
         {
             WriteLine($"### DAY {ProblemIndexStr} {ProblemType} - TEST ###");
