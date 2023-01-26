@@ -4,7 +4,7 @@ namespace AdventOfCode2022._14;
 
 public class Problem14 : Problem
 {
-    private OffsetGrid _grid = null!;
+    private OffsetGrid<char> _grid = null!;
 
     protected override void RunA_Internal(List<string> lines)
     {
@@ -84,7 +84,7 @@ public class Problem14 : Problem
         return tile == '#' || tile == 'o';
     }
 
-    private OffsetGrid CreateGrid(List<string> lines)
+    private OffsetGrid<char> CreateGrid(List<string> lines)
     {
         List<Path> rocks = ParsePaths(lines);
 
@@ -118,7 +118,11 @@ public class Problem14 : Problem
         int cols = maxX - minX + 1;
         int rows = maxY - minY + 1;
 
-        OffsetGrid grid = new(rows, cols, new Point() { X = minX, Y = minY });
+        OffsetGrid<char> grid = new(
+            rows,
+            cols,
+            new Point() { X = minX, Y = minY },
+            '.');
 
         if (ProblemType == EProblemType.B)
         {
@@ -134,7 +138,7 @@ public class Problem14 : Problem
         return grid;
     }
 
-    private static void AddRocks(List<Path> rocks, OffsetGrid grid)
+    private static void AddRocks(List<Path> rocks, OffsetGrid<char> grid)
     {
         foreach (Path rock in rocks)
         {
@@ -196,82 +200,7 @@ public class Problem14 : Problem
     }
 }
 
-class OffsetGrid
-{
-    private readonly char[,] _grid;
-
-    public int Rows => _grid.GetLength(0);
-
-    public int Cols => _grid.GetLength(1);
-
-    private int OffsetX { get; }
-    
-    private int OffsetY { get; }
-
-    public OffsetGrid(int rows, int cols, Point offset)
-    {
-        _grid = new char[rows, cols];
-
-        for (int i = 0; i < rows; i++)
-        {
-            for (int j = 0; j < cols; j++)
-            {
-                _grid.SetValue('.', i, j);
-            }
-        }
-
-        OffsetX = offset.X;
-        OffsetY = offset.Y;
-    }
-
-    public bool IsOutOfBounds(int x, int y)
-    {
-        x -= OffsetX;
-        y -= OffsetY;
-
-        return x < 0 || x >= Cols || y < 0 || y >= Rows;
-    }
-
-    public void Set(char value, int x, int y)
-    {
-        x -= OffsetX;
-        y -= OffsetY;
-
-        _grid[y, x] = value;
-    }
-
-    public char Get(int x, int y)
-    {
-        x -= OffsetX;
-        y -= OffsetY;
-
-        return _grid[y, x];
-    }
-
-    public void Print()
-    {
-        for (int i = 0; i < Rows; i++)
-        {
-            Console.Write(i.ToString("00") + " ");
-
-            for (int j = 0; j < Cols; j++)
-            {
-                Console.Write(_grid.GetValue(i, j) + " ");
-            }
-
-            Console.WriteLine();
-        }
-    }
-}
-
 class Path
 {
     public List<Point> Points { get; } = new List<Point>();
-}
-
-class Point
-{
-    public int X { get; set; }
-
-    public int Y { get; set; }
 }
