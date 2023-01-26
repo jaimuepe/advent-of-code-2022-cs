@@ -49,54 +49,6 @@ public partial class Problem15 : Problem
 
         List<Sensor> sensors = input.Sensors;
 
-        /*const int minX = 0;
-        int maxX = IsTest ? 20 : 4000000;
-        const int minY = 0;
-        int maxY = IsTest ? 20 : 4000000;
-
-        var perimeterDatas = new List<SensorPerimeterData>();
-
-        foreach (var sensor in sensors)
-        {
-            SensorPerimeterData perimeterData = new()
-            {
-                Sensor = sensor,
-            };
-
-            int distance = sensor.ClosestBeaconDistance + 1;
-
-            for (int i = -distance; i <= distance; i++)
-            {
-                int x = sensor.Position.X + i;
-                if (x < minX || x > maxX) continue;
-
-                int j = distance - Math.Abs(i);
-
-                int y1 = sensor.Position.Y + j;
-                int y2 = sensor.Position.Y - j;
-
-                if (y1 >= minY && y1 <= maxY)
-                {
-                    perimeterData.Points.Add(new Point()
-                    {
-                        X = x,
-                        Y = y1,
-                    });
-                }
-
-                if (y2 >= minY && y2 <= maxX)
-                {
-                    perimeterData.Points.Add(new Point()
-                    {
-                        X = x,
-                        Y = y2,
-                    });
-                }
-            }
-
-            perimeterDatas.Add(perimeterData);
-        }*/
-
         for (int i = 0; i < sensors.Count; i++)
         {
             Sensor sensor = sensors[i];
@@ -112,7 +64,7 @@ public partial class Problem15 : Problem
                     if (i == j) continue;
 
                     Sensor otherSensor = sensors[j];
-                    
+
                     int distance = CalcManhattanDistance(p, otherSensor.Position);
                     if (distance <= otherSensor.ClosestBeaconDistance)
                     {
