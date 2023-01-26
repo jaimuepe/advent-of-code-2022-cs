@@ -7,104 +7,25 @@ public partial class Problem15 : Problem
 {
     protected override void RunA_Internal(List<string> lines)
     {
-        int minX = int.MaxValue;
-        int maxX = int.MinValue;
-        int minY = int.MaxValue;
-        int maxY = int.MinValue;
+        ParsedInput input = Parse(lines);
 
-        List<Sensor> sensors = new();
-        Dictionary<Point, Beacon> beacons = new();
+        int minX = input.MinX;
+        int maxX = input.MaxX;
 
-        int sensorId = 0;
-        int beaconId = 0;
-
-        foreach (var line in lines)
-        {
-            var match = SensorRegex().Match(line);
-
-            int sensorX = int.Parse(match.Groups[1].Value);
-            int sensorY = int.Parse(match.Groups[2].Value);
-            int beaconX = int.Parse(match.Groups[3].Value);
-            int beaconY = int.Parse(match.Groups[4].Value);
-
-            Point sensorPos = new() { X = sensorX, Y = sensorY };
-            Point beaconPos = new() { X = beaconX, Y = beaconY };
-
-            int distance = CalcManhattanDistance(sensorPos, beaconPos);
-
-            if (!beacons.TryGetValue(beaconPos, out var beacon))
-            {
-                beacon = new Beacon()
-                {
-                    Id = beaconId++,
-                    Position = beaconPos,
-                };
-                beacons[beaconPos] = beacon;
-            }
-
-            sensors.Add(new Sensor()
-            {
-                Id = sensorId++,
-                Position = sensorPos,
-                ClosestBeacon = beacon,
-                ClosestBeaconDistance = distance,
-            });
-
-            minX = Math.Min(minX, Math.Min(sensorX - distance, beaconX));
-            maxX = Math.Max(maxX, Math.Max(sensorX + distance, beaconX));
-            minY = Math.Min(minY, Math.Min(sensorY - distance, beaconY));
-            maxY = Math.Max(maxY, Math.Max(sensorY + distance, beaconY));
-        }
-
-        /*int cols = maxX - minX + 1;
-        int rows = maxY - minY + 1;
-
-        var grid = new OffsetGrid<char>(
-            rows,
-            cols,
-            new Point() { X = minX, Y = minY },
-            '.');
-
-        foreach (var sensor in sensors)
-        {
-            grid.Set('S', sensor.Position.X, sensor.Position.Y);
-        }
-
-        foreach (var beacon in beacons.Values)
-        {
-            grid.Set('B', beacon.Position.X, beacon.Position.Y);
-        }
-
-        for (var y = minY; y < maxY; y++)
-        {
-            for (var x = minX; x < maxX; x++)
-            {
-                if (grid.Get(x, y) != '.') continue;
-
-                foreach (var sensor in sensors)
-                {
-                    var distance = CalcManhattanDistance(sensor.Position, new Point() { X = x, Y = y });
-                    if (distance <= sensor.ClosestBeaconDistance)
-                    {
-                        grid.Set('#', x, y);
-                        break;
-                    }
-                }
-            }
-        }*/
-
-        int result = 0;
+        List<Sensor> sensors = input.Sensors;
 
         // sort sensors in x axis
         sensors.Sort((s1, s2) => s1.Position.X.CompareTo(s2.Position.X));
 
-        var y = IsTest ? 10 : 2000000;
+        var refY = IsTest ? 10 : 2000000;
+
+        int result = 0;
 
         for (int x = minX; x < maxX; x++)
         {
-            var p = new Point() { X = x, Y = y };
+            var p = new Point() { X = x, Y = refY };
 
-            if (beacons.ContainsKey(p)) continue;
+            if (input.Beacons.ContainsKey(p)) continue;
 
             foreach (var sensor in sensors)
             {
@@ -124,78 +45,76 @@ public partial class Problem15 : Problem
 
     protected override void RunB_Internal(List<string> lines)
     {
-        int minX = int.MaxValue;
-        int maxX = int.MinValue;
-        int minY = int.MaxValue;
-        int maxY = int.MinValue;
+        ParsedInput input = Parse(lines);
 
-        List<Sensor> sensors = new();
-        Dictionary<Point, Beacon> beacons = new();
+        List<Sensor> sensors = input.Sensors;
 
-        int sensorId = 0;
-        int beaconId = 0;
+        /*const int minX = 0;
+        int maxX = IsTest ? 20 : 4000000;
+        const int minY = 0;
+        int maxY = IsTest ? 20 : 4000000;
 
-        foreach (var line in lines)
+        var perimeterDatas = new List<SensorPerimeterData>();
+
+        foreach (var sensor in sensors)
         {
-            var match = SensorRegex().Match(line);
-
-            int sensorX = int.Parse(match.Groups[1].Value);
-            int sensorY = int.Parse(match.Groups[2].Value);
-            int beaconX = int.Parse(match.Groups[3].Value);
-            int beaconY = int.Parse(match.Groups[4].Value);
-
-            Point sensorPos = new() { X = sensorX, Y = sensorY };
-            Point beaconPos = new() { X = beaconX, Y = beaconY };
-
-            int distance = CalcManhattanDistance(sensorPos, beaconPos);
-
-            if (!beacons.TryGetValue(beaconPos, out var beacon))
+            SensorPerimeterData perimeterData = new()
             {
-                beacon = new Beacon()
+                Sensor = sensor,
+            };
+
+            int distance = sensor.ClosestBeaconDistance + 1;
+
+            for (int i = -distance; i <= distance; i++)
+            {
+                int x = sensor.Position.X + i;
+                if (x < minX || x > maxX) continue;
+
+                int j = distance - Math.Abs(i);
+
+                int y1 = sensor.Position.Y + j;
+                int y2 = sensor.Position.Y - j;
+
+                if (y1 >= minY && y1 <= maxY)
                 {
-                    Id = beaconId++,
-                    Position = beaconPos,
-                };
-                beacons[beaconPos] = beacon;
+                    perimeterData.Points.Add(new Point()
+                    {
+                        X = x,
+                        Y = y1,
+                    });
+                }
+
+                if (y2 >= minY && y2 <= maxX)
+                {
+                    perimeterData.Points.Add(new Point()
+                    {
+                        X = x,
+                        Y = y2,
+                    });
+                }
             }
 
-            sensors.Add(new Sensor()
-            {
-                Id = sensorId++,
-                Position = sensorPos,
-                ClosestBeacon = beacon,
-                ClosestBeaconDistance = distance,
-            });
+            perimeterDatas.Add(perimeterData);
+        }*/
 
-            minX = Math.Min(minX, Math.Min(sensorX - distance, beaconX));
-            maxX = Math.Max(maxX, Math.Max(sensorX + distance, beaconX));
-            minY = Math.Min(minY, Math.Min(sensorY - distance, beaconY));
-            maxY = Math.Max(maxY, Math.Max(sensorY + distance, beaconY));
-        }
-
-        int y = IsTest ? 20 : 4000000;
-        int x = IsTest ? 20 : 4000000;
-
-        for (int i = 0; i < y; i++)
+        for (int i = 0; i < sensors.Count; i++)
         {
-            WriteLine(i.ToString());
-            
-            for (int j = 0; j < x; j++)
-            {
-                Point p = new Point() { X = j, Y = i };
+            Sensor sensor = sensors[i];
 
+            List<Point> perimeter = GetPerimeter(sensor);
+
+            foreach (Point p in perimeter)
+            {
                 bool outOfReach = true;
 
-                foreach (var sensor in sensors)
+                for (int j = 0; j < sensors.Count; j++)
                 {
-                    if (sensor.Position.Equals(p))
-                    {
-                        outOfReach = false;
-                        break;
-                    }
+                    if (i == j) continue;
 
-                    var distance = CalcManhattanDistance(sensor.Position, p);
-                    if (distance <= sensor.ClosestBeaconDistance)
+                    Sensor otherSensor = sensors[j];
+                    
+                    int distance = CalcManhattanDistance(p, otherSensor.Position);
+                    if (distance <= otherSensor.ClosestBeaconDistance)
                     {
                         outOfReach = false;
                         break;
@@ -204,11 +123,108 @@ public partial class Problem15 : Problem
 
                 if (outOfReach)
                 {
-                    WriteLine($"Result: {j * 4000000 + i}");
+                    var tuningFrequency = (long)p.X * 4000000 + p.Y;
+                    WriteLine($"Result: {tuningFrequency}");
                     return;
                 }
             }
         }
+    }
+
+    private List<Point> GetPerimeter(Sensor sensor)
+    {
+        const int minX = 0;
+        int maxX = IsTest ? 20 : 4000000;
+        const int minY = 0;
+        int maxY = IsTest ? 20 : 4000000;
+
+        int distance = sensor.ClosestBeaconDistance + 1;
+
+        var perimeter = new List<Point>();
+
+        for (int i = -distance; i <= distance; i++)
+        {
+            int x = sensor.Position.X + i;
+            if (x < minX || x > maxX) continue;
+
+            int j = distance - Math.Abs(i);
+
+            int y1 = sensor.Position.Y + j;
+            int y2 = sensor.Position.Y - j;
+
+            if (y1 >= minY && y1 <= maxY)
+            {
+                perimeter.Add(new Point()
+                {
+                    X = x,
+                    Y = y1,
+                });
+            }
+
+            if (y2 >= minY && y2 <= maxX)
+            {
+                perimeter.Add(new Point()
+                {
+                    X = x,
+                    Y = y2,
+                });
+            }
+        }
+
+        return perimeter;
+    }
+
+    private ParsedInput Parse(List<string> lines)
+    {
+        int minX = int.MaxValue;
+        int maxX = int.MinValue;
+        int minY = int.MaxValue;
+        int maxY = int.MinValue;
+
+        List<Sensor> sensors = new();
+        Dictionary<Point, Beacon> beacons = new();
+
+        foreach (var line in lines)
+        {
+            var match = SensorRegex().Match(line);
+
+            int sensorX = int.Parse(match.Groups[1].Value);
+            int sensorY = int.Parse(match.Groups[2].Value);
+
+            int beaconX = int.Parse(match.Groups[3].Value);
+            int beaconY = int.Parse(match.Groups[4].Value);
+
+            Point sensorPos = new() { X = sensorX, Y = sensorY };
+            Point beaconPos = new() { X = beaconX, Y = beaconY };
+
+            int distance = CalcManhattanDistance(sensorPos, beaconPos);
+
+            sensors.Add(new Sensor
+            {
+                Position = sensorPos,
+                ClosestBeaconDistance = distance,
+            });
+
+            if (!beacons.ContainsKey(beaconPos))
+            {
+                beacons.Add(beaconPos, new Beacon { Position = beaconPos, });
+            }
+
+            minX = Math.Min(minX, Math.Min(sensorX - distance, beaconX));
+            maxX = Math.Max(maxX, Math.Max(sensorX + distance, beaconX));
+            minY = Math.Min(minY, Math.Min(sensorY - distance, beaconY));
+            maxY = Math.Max(maxY, Math.Max(sensorY + distance, beaconY));
+        }
+
+        return new ParsedInput()
+        {
+            Sensors = sensors,
+            Beacons = beacons,
+            MinX = minX,
+            MaxX = maxX,
+            MinY = minY,
+            MaxY = maxY,
+        };
     }
 
     private int CalcManhattanDistance(Point p1, Point p2)
@@ -220,20 +236,36 @@ public partial class Problem15 : Problem
     private static partial Regex SensorRegex();
 }
 
+class ParsedInput
+{
+    public List<Sensor> Sensors { get; init; }
+
+    public Dictionary<Point, Beacon> Beacons { get; init; }
+
+    public int MinX { get; init; }
+
+    public int MaxX { get; init; }
+
+    public int MinY { get; init; }
+
+    public int MaxY { get; init; }
+}
+
+class SensorPerimeterData
+{
+    public Sensor Sensor { get; init; }
+
+    public List<Point> Points { get; } = new List<Point>();
+}
+
 class Sensor
 {
-    public int Id { get; init; }
-
     public Point Position { get; init; }
-
-    public Beacon ClosestBeacon { get; init; }
 
     public int ClosestBeaconDistance { get; init; }
 }
 
 class Beacon
 {
-    public int Id { get; init; }
-
     public Point Position { get; init; }
 }
