@@ -80,6 +80,10 @@ public partial class Problem16 : Problem
         WriteLine($"Result: {pressure}");
     }
 
+    protected override void RunB_Internal(List<string> lines)
+    {
+    }
+
     private string? FindBestMove(string currentValveId, string? valveIdToIgnore, int remainingTime)
     {
         string? bestValveId = null;
@@ -90,148 +94,57 @@ public partial class Problem16 : Problem
             if (valve.IsOpened) continue;
             if (valve.Id == valveIdToIgnore) continue;
 
-            int score;
-            if (valve.Id == currentValveId)
+            int score = GetMoveScore(currentValveId, valve.Id, remainingTime);
+
+            if (score > bestScore)
             {
-                // activate this valve?
-                score = valve.FlowRate * (remainingTime - 1);
-            }
-            else
-            {
-                IList<string> shortestPath = GetShortestPathToValve(currentValveId, valve.Id);
-
-                // how many minutes will it take me to get there?
-                int timeToGetThere = shortestPath.Count;
-
-                int activeTime = remainingTime - timeToGetThere - 1;
-
-                if (activeTime > 0)
-                {
-                    score = activeTime * valve.FlowRate / timeToGetThere;
-                }
-                else
-                {
-                    // no point in getting there
-                    score = 0;
-                }
-            }
-
-            for (int j = 0; j < 2; j++)
-            {
-                if (score > bestScore)
-                {
-                    bestScore = score;
-                    bestValveId = valve.Id;
-                }
+                bestScore = score;
+                bestValveId = valve.Id;
             }
         }
 
         return bestValveId;
     }
 
-    protected override void RunB_Internal(List<string> lines)
+    private int GetMoveScore(string currentValveId, string targetValveId, int remainingTime)
     {
-        const int TOTAL_TIME = 26;
+        int score;
 
-        _valves = ParseValves(lines);
+        Valve targetValve = _valves[targetValveId];
 
-        _cachedShortestPaths = new Dictionary<string, IList<string>>();
-
-        string currentValveId = "AA";
-
-        int pressure = 0;
-
-        for (int i = 0; i < TOTAL_TIME; i++)
+        if (targetValveId == currentValveId)
         {
-            int remainingTime = TOTAL_TIME - i;
+            // activate this valve?
+            score = targetValve.FlowRate * (remainingTime - 1);
+        }
+        else
+        {
+            IList<string> shortestPath = GetShortestPathToValve(currentValveId, targetValveId);
 
-#if _16_VERBOSE
-            WriteLine($"== Minute {i + 1} ==");
-#endif
+            // how many minutes will it take me to get there?
+            int timeToGetThere = shortestPath.Count;
 
-            var openValves = _valves.Values
-                .Where(valve => valve.IsOpened)
-                .ToArray();
+            int activeTime = remainingTime - timeToGetThere - 1;
 
-            if (openValves.Length == 0)
+            if (activeTime > 0)
             {
-#if _16_VERBOSE
-                WriteLine("No valves are open.");
-#endif
+                if (ProblemType == EProblemType.A)
+                {
+                    score = activeTime * targetValve.FlowRate / timeToGetThere;
+                }
+                else
+                {
+                    score = activeTime * targetValve.FlowRate;
+                }
             }
             else
             {
-                int pressureToAdd = openValves.Sum(valve => valve.FlowRate);
-#if _16_VERBOSE
-                WriteLine(
-                    $"Valves {string.Join(", ", openValves.Select(valve => valve.Id))} are open, releasing {pressureToAdd} pressure.");
-#endif
-                pressure += pressureToAdd;
+                // no point in getting there
+                score = 0;
             }
-
-            string? bestValveId = null;
-            int bestScore = 0;
-
-            foreach (Valve valve in _valves.Values)
-            {
-                if (valve.IsOpened) continue;
-
-                int score;
-                if (valve.Id == currentValveId)
-                {
-                    // activate this valve?
-                    score = valve.FlowRate * (remainingTime - 1);
-                }
-                else
-                {
-                    IList<string> shortestPath = GetShortestPathToValve(currentValveId, valve.Id);
-
-                    // how many minutes will it take me to get there?
-                    int timeToGetThere = shortestPath.Count;
-
-                    int activeTime = remainingTime - timeToGetThere - 1;
-
-                    if (activeTime > 0)
-                    {
-                        score = activeTime * valve.FlowRate / timeToGetThere;
-                    }
-                    else
-                    {
-                        // no point in getting there
-                        score = 0;
-                    }
-                }
-
-                if (score > bestScore)
-                {
-                    bestScore = score;
-                    bestValveId = valve.Id;
-                }
-            }
-
-            if (bestValveId != null)
-            {
-                if (bestValveId == currentValveId)
-                {
-                    _valves[currentValveId].IsOpened = true;
-#if _16_VERBOSE
-                    WriteLine($"You open valve {bestValveId}");
-#endif
-                }
-                else
-                {
-                    IList<string> shortestPath = GetShortestPathToValve(currentValveId, bestValveId);
-                    currentValveId = shortestPath[0];
-#if _16_VERBOSE
-                    WriteLine($"You move to valve {currentValveId}");
-#endif
-                }
-            }
-
-#if _16_VERBOSE
-            WriteLine();
-#endif
         }
+
+        return score;
     }
 
     private IList<string> GetShortestPathToValve(string fromId, string toId)

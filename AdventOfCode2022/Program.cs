@@ -14,6 +14,8 @@ Problem problem;
 problem = new Problem16();
 
 problem.RunA(true);
+problem.RunA(false);
+//problem.RunB(false);
 //problem.RunA(false);
 //problem.RunB(true);
 //problem.RunB(false);
